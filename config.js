@@ -15,7 +15,7 @@ config = {
         database: {
             client: 'mysql',
             connection: {
-                host: 'tcp://10.10.26.58:3306',
+                host: '10.10.26.58:3306',
                 user: 'uPInaXpLeZ6OoUSi',
                 password: 'p6qVvFB20RrtA5CUD',
                 database: 'eybf567LHUkpcgaP',
