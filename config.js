@@ -11,7 +11,7 @@ config = {
     // When running Ghost in the wild, use the production environment
     // Configure your URL and mail settings here
     production: {
-        url: process.env.GHOST_ROOT_URL,
+        url: 'ibruce.me',
         mail: {},
         database: {
             client: 'mysql',
