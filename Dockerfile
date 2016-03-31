@@ -21,7 +21,7 @@ ENV GHOST_SOURCE /usr/src/ghost
 ENV GHOST_ROOT_URL http://jobs.cn.cenmeo.com
 WORKDIR $GHOST_SOURCE
 
-ENV GHOST_VERSION 0.7.224
+ENV GHOST_VERSION 201641
 
 RUN buildDeps=' \
 		gcc \
