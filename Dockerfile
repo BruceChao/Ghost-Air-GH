@@ -24,7 +24,7 @@ RUN set -x \
 ENV GHOST_SOURCE /usr/src/ghost
 WORKDIR $GHOST_SOURCE
 
-ENV GHOST_VERSION 0.9.10
+ENV GHOST_VERSION 0.9.11
 
 RUN buildDeps=' \
 		gcc \
