@@ -1,24 +1,27 @@
-FROM node:4.2-slim
+# http://support.ghost.org/supported-node-versions/
+# https://github.com/nodejs/LTS
+FROM node:4-slim
 
 RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
 
-RUN set -x \
-	&& apt-get update \
-	&& apt-get install -y --no-install-recommends curl ca-certificates \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+		ca-certificates \
+		wget \
+	--no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # grab gosu for easy step-down from root
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
-RUN arch="$(dpkg --print-architecture)" \
-	&& set -x \
-	&& curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-$arch" \
-	&& curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-$arch.asc" \
-	&& gpg --verify /usr/local/bin/gosu.asc \
-	&& rm /usr/local/bin/gosu.asc \
-	&& chmod +x /usr/local/bin/gosu
+ENV GOSU_VERSION 1.7
+RUN set -x \
+	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
+	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
+	&& export GNUPGHOME="$(mktemp -d)" \
+	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+	&& chmod +x /usr/local/bin/gosu \
+	&& gosu nobody true
 
 ENV GHOST_SOURCE /usr/src/ghost
-ENV GHOST_ROOT_URL http://jobs.cn.cenmeo.com
 WORKDIR $GHOST_SOURCE
 
 ENV GHOST_VERSION 0.9.0
@@ -31,7 +34,7 @@ RUN buildDeps=' \
 	' \
 	&& set -x \
 	&& apt-get update && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
-	&& curl -sSL "https://ghost.org/archives/ghost-${GHOST_VERSION}.zip -o ghost.zip \
+	&& wget -O ghost.zip "https://ghost.org/archives/ghost-${GHOST_VERSION}.zip" \
 	&& unzip ghost.zip \
 	&& npm install --production \
 	&& apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps \
@@ -40,12 +43,11 @@ RUN buildDeps=' \
 	&& rm -rf /tmp/npm*
 
 ENV GHOST_CONTENT /var/lib/ghost
-RUN mkdir -p "$GHOST_CONTENT" && chown -R user:user "$GHOST_CONTENT" "$GHOST_SOURCE"
-ADD config.js /var/lib/ghost/
-#VOLUME $GHOST_CONTENT
+RUN mkdir -p "$GHOST_CONTENT" && chown -R user:user "$GHOST_CONTENT"
+VOLUME $GHOST_CONTENT
 
 COPY docker-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 2368
-CMD ["npm", "start", "--production"]
+CMD ["npm", "start"]
